@@ -14,26 +14,26 @@
 #include "c_api/asc_simd.h"
 #include "c_api/utils_intf.h"
 
-class TestSyncBlkWait : public testing::Test {
+class TestSyncInterWait : public testing::Test {
 protected:
     void SetUp() {}
     void TearDown() {}
 };
 
 namespace {
-void asc_sync_block_wait_stub(int64_t flagID)
+void asc_sync_inter_wait_stub(int64_t flagID)
 {
     EXPECT_EQ(33, flagID);
 }
 }
 
-TEST_F(TestSyncBlkWait, sync_block_wait_Succ)
+TEST_F(TestSyncInterWait, sync_inter_wait_Succ)
 {
     int64_t flagID = 33;
     MOCKER_CPP(wait_flag_dev, void(int64_t))
             .times(1)
-            .will(invoke(asc_sync_block_wait_stub));
+            .will(invoke(asc_sync_inter_wait_stub));
 
-    asc_sync_block_wait(pipe_t::PIPE_S, flagID);
+    asc_sync_inter_wait(pipe_t::PIPE_S, flagID);
     GlobalMockObject::verify();
 }
