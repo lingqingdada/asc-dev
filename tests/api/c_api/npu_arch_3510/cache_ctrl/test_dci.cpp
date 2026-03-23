@@ -8,14 +8,24 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef IMPL_C_API_INSTR_IMPL_NPU_ARCH_3510_SYNC_IMPL_H
-#define IMPL_C_API_INSTR_IMPL_NPU_ARCH_3510_SYNC_IMPL_H
+#include <gtest/gtest.h>
+#include <mockcpp/mockcpp.hpp>
+#include "c_api/stub/cce_stub.h"
+#include "c_api/asc_simd.h"
 
-#include "instr_impl/npu_arch_3510/sync_impl/asc_sync_notify_impl.h"
-#include "instr_impl/npu_arch_3510/sync_impl/asc_sync_wait_impl.h"
-#include "instr_impl/npu_arch_3510/sync_impl/asc_sync_pipe_impl.h"
-#include "instr_impl/npu_arch_3510/sync_impl/asc_sync_block_arrive_impl.h"
-#include "instr_impl/npu_arch_3510/sync_impl/asc_sync_data_barrier_impl.h"
-#include "instr_impl/npu_arch_3510/sync_impl/asc_get_buf_impl.h"
+class TestDciCAPI : public testing::Test {
+protected:
+    void SetUp() {}
+    void TearDown() {}
+};
 
-#endif
+namespace {
+void dci_stub() {}
+} // namespace
+
+TEST_F(TestDciCAPI, c_api_dci_succ)
+{
+    MOCKER(dci, void()).times(1).will(invoke(dci_stub));
+    asc_dci();
+    GlobalMockObject::verify();
+}

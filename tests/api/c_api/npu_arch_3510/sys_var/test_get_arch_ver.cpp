@@ -8,14 +8,24 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef IMPL_C_API_INSTR_IMPL_NPU_ARCH_3510_SYNC_IMPL_H
-#define IMPL_C_API_INSTR_IMPL_NPU_ARCH_3510_SYNC_IMPL_H
+#include <gtest/gtest.h>
+#include <mockcpp/mockcpp.hpp>
+#include "c_api/stub/cce_stub.h"
+#include "include/c_api/asc_simd.h"
 
-#include "instr_impl/npu_arch_3510/sync_impl/asc_sync_notify_impl.h"
-#include "instr_impl/npu_arch_3510/sync_impl/asc_sync_wait_impl.h"
-#include "instr_impl/npu_arch_3510/sync_impl/asc_sync_pipe_impl.h"
-#include "instr_impl/npu_arch_3510/sync_impl/asc_sync_block_arrive_impl.h"
-#include "instr_impl/npu_arch_3510/sync_impl/asc_sync_data_barrier_impl.h"
-#include "instr_impl/npu_arch_3510/sync_impl/asc_get_buf_impl.h"
+class TestSysVarGetArchVer : public testing::Test {
+protected:
+    void SetUp() {}
+    void TearDown() {}
+};
 
-#endif
+TEST_F(TestSysVarGetArchVer, get_arch_ver_Succ)
+{
+    MOCKER(get_arch_ver, int64_t(void)).times(1).will(returnValue(int64_t(0x123456789ABCDEF0)));
+
+    uint32_t core_version = 0;
+    asc_get_arch_ver(core_version);
+
+    uint32_t expectedValue = 0x678;
+    EXPECT_EQ(expectedValue, core_version);
+}
