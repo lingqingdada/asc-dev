@@ -24,7 +24,7 @@ find_package(ASC REQUIRED)
 project(kernel_samples LANGUAGES ASC CXX)
 
 add_executable(demo
-    mul.asc
+    muls.asc
 )
 
 target_link_libraries(demo PRIVATE

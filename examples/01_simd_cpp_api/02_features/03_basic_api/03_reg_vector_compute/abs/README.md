@@ -1,43 +1,46 @@
-# ld_st_reg_unalign样例
+# abs样例
 
 ## 概述
-本样例基于RegBase编程范式实现UB(Unified Buffer)对RegTensor(Reg矢量计算基本单元)的非对齐数据搬运操作，该样例使用LoadUnAlign，StoreUnAlign，LoadUnAlignPre，StoreUnAlignPost接口。
+本样例基于RegBase编程范式实现Abs运算，主要调用Abs接口。
+- Relu/Exp/Sqrt/Ln/Log/Log2/Log10/Neg接口皆可参考该样例
 
 ## 支持的产品
 - Ascend 950PR/Ascend 950DT
 
 ## 目录结构介绍
 ```
-├── ld_st_reg_unalign
+├── abs
+│   ├── scripts
+│   │   ├── gen_data.py                // 输入数据和真值数据生成脚本
 │   ├── CMakeLists.txt                 // 编译工程文件
+│   ├── data_utils.h                   // 数据读入写出函数
+│   ├── abs.asc                        // AscendC样例实现 & 调用样例
 │   └── README.md                      // 样例介绍
-│   └── ld_st_reg_unalign.asc          // AscendC样例实现 & 调用样例
 ```
 
 ## 样例描述
-- 样例功能：  
-  输入一个数据类型为float，数据量为1024的向量，在源操作数和目的操作数地址均非32B对齐的情况下，搬运128个数据。
+- 样例功能：
+  计算向量中每个元素的绝对值，向量数据量为256，数据类型为float。
 - 样例规格：
   <table>
   <tr><td rowspan="1" align="center">样例类型(OpType)</td><td colspan="3" align="center">AIV样例</td></tr>
   </tr>
   <tr><td rowspan="2" align="center">样例输入</td><td align="center">name</td><td align="center">shape</td><td align="center">data type</td></tr>
-  <tr><td align="center">x</td><td align="center">[1, 1024]</td><td align="center">float</td></tr>
+  <tr><td align="center">x</td><td align="center">[1, 256]</td><td align="center">float</td></tr>
   </tr>
   </tr>
-  <tr><td rowspan="1" align="center">样例输出</td><td align="center">y</td><td align="center">[1, 128]</td><td align="center">float</td></tr>
+  <tr><td rowspan="1" align="center">样例输出</td><td align="center">y</td><td align="center">[1, 256]</td><td align="center">float</td></tr>
   </tr>
-  <tr><td rowspan="1" align="center">核函数名</td><td colspan="4" align="center">ld_st_reg_unalign_kernel</td></tr>
+  <tr><td rowspan="1" align="center">核函数名</td><td colspan="4" align="center">abs</td></tr>
   </table>
-- 样例实现：  
-   将UB上源操作数和目的操作数地址偏移一个元素（4 Btype）长度，使得起始地址非32B对齐，调用CopyVF从该地址开始搬运128个float数，写回UB(Unified Buffer)。
-  
-  - 调用实现  
+- 样例实现：
+   AbsVF函数内调用Abs接口进行计算，结果写回UB
+  - 调用实现
     使用内核调用符<<<>>>调用核函数。
-    
+
 ## 编译运行
 在本样例根目录下执行如下步骤，编译并执行样例。
-- 配置环境变量  
+- 配置环境变量
   请根据当前环境上CANN开发套件包的[安装方式](../../../../../../docs/quick_start.md#prepare&install)，选择对应配置环境变量的命令。
   - 默认路径，root用户安装CANN软件包
     ```bash
@@ -53,11 +56,12 @@
     ```bash
     source ${install_path}/cann/set_env.sh
     ```
-    
+
 - 样例执行
   ```bash
   mkdir -p build && cd build;                                               # 创建并进入build目录
-  cmake -DNPU_ARCH=dav-3510 ..;make -j;                                     # 编译工程
+  cmake -DNPU_ARCH=dav-3510 ..;make -j;                                     # 编译工程（默认npu模式）
+  python3 ../scripts/gen_data.py                                            # 生成测试输入数据
   ./demo                                                                    # 执行编译生成的可执行程序，执行样例
   ```
 

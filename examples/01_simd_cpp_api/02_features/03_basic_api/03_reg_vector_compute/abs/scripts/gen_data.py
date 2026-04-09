@@ -1,3 +1,6 @@
+#!/usr/bin/python3
+# coding=utf-8
+
 # ----------------------------------------------------------------------------------------------------------
 # Copyright (c) 2025 Huawei Technologies Co., Ltd.
 # This program is free software, you can redistribute it and/or modify it under the terms and conditions of
@@ -9,31 +12,20 @@
 # ----------------------------------------------------------------------------------------------------------
 
 
-cmake_minimum_required(VERSION 3.16)
+import os
+import numpy as np
 
-if(DEFINED RUN_MODE)
-    set(CMAKE_ASC_RUN_MODE ${RUN_MODE} CACHE STRING "Alias of RUN_MODE")
-endif()
+def gen_golden_data_simple():
+    total_length = 256
+    data_type = np.float32
+    # 生成一个 [1, 256] 向量，包含正负值
+    x = np.random.uniform(-2, 2, [1, total_length]).astype(data_type)
+    # 计算绝对值 y = |x|
+    golden = np.abs(x)
+    os.makedirs("input", exist_ok=True)
+    os.makedirs("output", exist_ok=True)
+    x.tofile('./input/input_x.bin')
+    golden.tofile('./output/golden.bin')
 
-if(DEFINED NPU_ARCH)
-    set(CMAKE_ASC_ARCHITECTURES ${NPU_ARCH} CACHE STRING "Alias of NPU_ARCH")
-endif()
-
-find_package(ASC REQUIRED)
-
-project(kernel_samples LANGUAGES ASC CXX)
-
-add_executable(demo
-    ld_st_reg_mask.asc
-)
-
-# ======================================================================================
-# NPU 编译选项配置
-#
-# 说明：
-#   - 需根据实际部署的 NPU 硬件架构选择对应的 `npu-arch` 参数。
-# ======================================================================================
-set(NPU_ARCH "dav-3510" CACHE STRING "NPU ARCH, e.g. dav-3510")
-target_compile_options(demo PRIVATE
-    $<$<COMPILE_LANGUAGE:ASC>:--npu-arch=${NPU_ARCH}>
-)
+if __name__ == "__main__":
+    gen_golden_data_simple()
