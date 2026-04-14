@@ -1,5 +1,8 @@
+#!/usr/bin/python3
+# coding=utf-8
+
 # ----------------------------------------------------------------------------------------------------------
-# Copyright (c) 2025 Huawei Technologies Co., Ltd.
+# Copyright (c) 2026 Huawei Technologies Co., Ltd.
 # This program is free software, you can redistribute it and/or modify it under the terms and conditions of
 # CANN Open Software License Agreement Version 2.0 (the "License").
 # Please refer to the License for details. You may not use this file except in compliance with the License.
@@ -9,27 +12,25 @@
 # ----------------------------------------------------------------------------------------------------------
 
 
-cmake_minimum_required(VERSION 3.16)
+import os
+import sys
+import numpy as np
 
-set(CMAKE_ASC_RUN_MODE "npu" CACHE STRING "Run mode: npu, cpu, sim")
-set(CMAKE_ASC_ARCHITECTURES "dav-3510" CACHE STRING "NPU architecture: dav-3510")
+def gen_golden_data_simple(src_data_type, dst_data_type):
+    total_length = 256
+    x = np.random.uniform(-100, 100, [1, total_length]).astype(src_data_type)
+    golden = np.rint(x).astype(dst_data_type)
+    os.makedirs("input", exist_ok=True)
+    os.makedirs("output", exist_ok=True)
+    x.tofile('./input/input_x.bin')
+    golden.tofile('./output/golden.bin')
 
-find_package(ASC REQUIRED)
-
-project(kernel_samples LANGUAGES ASC CXX)
-
-add_executable(demo
-    abs.asc
-)
-
-target_link_libraries(demo PRIVATE
-    tiling_api
-    register
-    platform
-    m
-)
-
-target_compile_options(demo PRIVATE
-    $<$<COMPILE_LANGUAGE:ASC>:--npu-arch=${CMAKE_ASC_ARCHITECTURES}>
-    $<$<COMPILE_LANGUAGE:ASC>:--cce-simd-vf-fusion=false>
-)
+if __name__ == "__main__":
+    scenario_num = int(sys.argv[1])
+    if scenario_num == 1:
+        src_data_type = np.float16
+        dst_data_type = np.int32
+    else:
+        src_data_type = np.float32
+        dst_data_type = np.int16
+    gen_golden_data_simple(src_data_type, dst_data_type)

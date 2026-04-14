@@ -1,37 +1,36 @@
-# mul样例
+# truncate样例
 
 ## 概述
-本样例基于RegBase编程范式实现Mul运算，主要调用Mul接口。
-- Add/Sub/Div/Max/Min/Prelu接口皆可参考该样例
+本样例基于RegBase编程范式实现Truncate运算，用于将RegTensor（Reg矢量计算基本单元）的浮点数截断到整数位，主要调用Truncate接口。
 
 ## 支持的产品
 - Ascend 950PR/Ascend 950DT
 
 ## 目录结构介绍
 ```
-├── mul
+├── truncate
 │   ├── scripts
 │   │   ├── gen_data.py                // 输入数据和真值数据生成脚本
 │   ├── CMakeLists.txt                 // 编译工程文件
 │   ├── data_utils.h                   // 数据读入写出函数
-│   ├── mul.asc                        // AscendC样例实现 & 调用样例
+│   ├── truncate.asc                   // AscendC样例实现 & 调用样例
 │   └── README.md                      // 样例介绍
 ```
 
 ## 样例描述
 - 样例功能：  
-  对两个相同大小的向量做逐元素乘法，向量元素个数为256，数据类型为float。
+  本样例将输入向量的浮点数元素截断到整数位，截断时向下取整。
+
 - 样例规格：
   <table>
   <tr><td rowspan="1" align="center">样例类型(OpType)</td><td colspan="3" align="center">AIV样例</td></tr>
-  <tr><td rowspan="3" align="center">样例输入</td><td align="center">name</td><td align="center">shape</td><td align="center">data type</td></tr>
+  <tr><td rowspan="2" align="center">样例输入</td><td align="center">name</td><td align="center">shape</td><td align="center">data type</td></tr>
   <tr><td align="center">x</td><td align="center">[1, 256]</td><td align="center">float</td></tr>
-   <tr><td align="center">y</td><td align="center">[1, 256]</td><td align="center">float</td></tr>
-  <tr><td rowspan="1" align="center">样例输出</td><td align="center">z</td><td align="center">[1, 256]</td><td align="center">float</td></tr>
-  <tr><td rowspan="1" align="center">核函数名</td><td colspan="4" align="center">mul</td></tr>
+  <tr><td rowspan="1" align="center">样例输出</td><td align="center">y</td><td align="center">[1, 256]</td><td align="center">float</td></tr>
+  <tr><td rowspan="1" align="center">核函数名</td><td colspan="4" align="center">truncate</td></tr>
   </table>
 - 样例实现：  
-   MulVF函数内调用Mul接口进行计算，结果写回UB
+   TruncateVF函数内调用Truncate接口进行计算，结果写回UB
   - 调用实现  
     使用内核调用符<<<>>>调用核函数。
 
@@ -61,7 +60,7 @@
   python3 ../scripts/gen_data.py                                            # 生成测试输入数据
   ./demo                                                                    # 执行编译生成的可执行程序，执行样例
   ```
-
+ 
   使用 CPU调试 或 NPU仿真 模式时，添加 `-DCMAKE_ASC_RUN_MODE=cpu` 或 `-DCMAKE_ASC_RUN_MODE=sim` 参数即可。
 
   示例如下：
@@ -77,7 +76,7 @@
 | 选项 | 可选值 | 说明 |
 |------|--------|------|
 | `CMAKE_ASC_RUN_MODE` | `npu`（默认）、`cpu`、`sim` | 运行模式：NPU 运行、CPU调试、NPU仿真 |
-| `CMAKE_ASC_ARCHITECTURES` | `dav-3510`（默认） | NPU 架构：dav-3510 对应 Ascend 950PR/Ascend 950DT |
+| `CMAKE_ASC_ARCHITECTURES` | `dav-3510` | NPU 架构：dav-3510 对应 Ascend 950PR/Ascend 950DT |
 
 - 执行结果
 
