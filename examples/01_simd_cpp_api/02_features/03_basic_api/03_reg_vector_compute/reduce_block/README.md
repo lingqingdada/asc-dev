@@ -1,42 +1,49 @@
-# muls样例
+# reduce_block样例
 
 ## 概述
-本样例基于RegBase编程范式实现Muls运算，主要调用Muls接口。
-- Adds/Maxs/Mins/LeakyRelu接口皆可参考该样例
+本样例基于RegBase编程范式实现ReduceDataBlock运算，主要调用ReduceDataBlock接口（SUM模式）。
+- ReduceDataBlock接口支持SUM/MAX/MIN归约模式，本样例以SUM模式为例
 
 ## 支持的产品
 - Ascend 950PR/Ascend 950DT
 
 ## 目录结构介绍
 ```
-├── muls
+├── reduce_block
 │   ├── scripts
 │   │   ├── gen_data.py                // 输入数据和真值数据生成脚本
 │   ├── CMakeLists.txt                 // 编译工程文件
 │   ├── data_utils.h                   // 数据读入写出函数
-│   ├── muls.asc                       // AscendC样例实现 & 调用样例
+│   ├── reduce_block.asc               // AscendC样例实现 & 调用样例
 │   └── README.md                      // 样例介绍
 ```
 
 ## 样例描述
 - 样例功能：  
-  对向量做标量乘法，向量元素个数为256，数据类型为float，标量值为2.0。
+  对输入向量做ReduceDataBlock归约求和运算，向量shape为[1, 256]，数据类型为float。  
+  每8个float（一个DataBlock=32B）产生一个求和结果，共输出32个结果。
+- 每个 `oneRepeatSize`（如 float 类型为 64 元素）块中：
+  - 前 `blocksPerRepeat`（8个）位置存放有效的归约结果
+  - 后 `oneRepeatSize - blocksPerRepeat`（56个）位置为无效数据（未定义值）
+
 - 样例规格：
   <table>
   <tr><td rowspan="1" align="center">样例类型(OpType)</td><td colspan="3" align="center">AIV样例</td></tr>
   </tr>
-  <tr><td rowspan="3" align="center">样例输入</td><td align="center">name</td><td align="center">shape</td><td align="center">data type</td></tr>
+  <tr><td rowspan="2" align="center">样例输入</td><td align="center">name</td><td align="center">shape</td><td align="center">data type</td></tr>
   <tr><td align="center">x</td><td align="center">[1, 256]</td><td align="center">float</td></tr>
-  <tr><td align="center">scalar</td><td align="center">[1]</td><td align="center">float</td></tr>
   </tr>
+  <tr><td rowspan="1" align="center">样例输出</td><td align="center">y</td><td align="center">[1, 32]</td><td align="center">float</td></tr>
   </tr>
-  <tr><td rowspan="1" align="center">样例输出</td><td align="center">z</td><td align="center">[1, 256]</td><td align="center">float</td></tr>
-  </tr>
-  <tr><td rowspan="1" align="center">核函数名</td><td colspan="4" align="center">muls</td></tr>
+  <tr><td rowspan="1" align="center">核函数名</td><td colspan="4" align="center">reduce_block</td></tr>
   </table>
 - 样例实现：  
-   MulsVF函数内调用Muls接口进行计算，结果写回UB
-  - 调用实现  
+   ReduceDataBlockSumVF函数内调用ReduceDataBlock接口进行归约计算：
+   - 使用LoadAlign加载数据到寄存器
+   - 使用ReduceDataBlock(ReduceType::SUM)对每个DataBlock(32B)内的元素求和
+   - 结果采用交织布局存储在dstReg中，每个repeat的前8个位置为有效结果
+   - 使用StoreAlign将结果写回UB，偏移使用oneRepeatSize
+  - 调用实现
     使用内核调用符<<<>>>调用核函数。
 
 ## 编译运行
@@ -61,7 +68,7 @@
 - 样例执行
   ```bash
   mkdir -p build && cd build;                                               # 创建并进入build目录
-  cmake -DCMAKE_ASC_ARCHITECTURES=dav-3510 ..;make -j;                                     # 编译工程（默认npu模式）
+  cmake -DCMAKE_ASC_ARCHITECTURES=dav-3510 ..;make -j;                      # 编译工程（默认npu模式）
   python3 ../scripts/gen_data.py                                            # 生成测试输入数据
   ./demo                                                                    # 执行编译生成的可执行程序，执行样例
   ```
@@ -78,10 +85,10 @@
 
 - 编译选项说明
 
-| 选项　　　　　　　　　　　| 可选值　　　　　　　　　　　| 说明　　　　　　　　　　　　　　　　　　　　　　　|
-| ---------------------------| -----------------------------| ---------------------------------------------------|
-| `CMAKE_ASC_RUN_MODE`　　　| `npu`（默认）、`cpu`、`sim` | 运行模式：NPU 运行、CPU调试、NPU仿真　　　　　　　|
-| `CMAKE_ASC_ARCHITECTURES` | `dav-3510`（默认）　　　　　| NPU 架构：dav-3510 对应 Ascend 950PR/Ascend 950DT |
+| 选项　　　 | 可选值　　　　　　　　　　　| 说明　　　　　　　　　　　　　　　　　　　　　　　|
+| ------------| -----------------------------| ---------------------------------------------------|
+| `CMAKE_ASC_RUN_MODE` | `npu`（默认）、`cpu`、`sim` | 运行模式：NPU 运行、CPU调试、NPU仿真　　　　　　　|
+| `CMAKE_ASC_ARCHITECTURES` | `dav-3510` | NPU 架构：dav-3510 对应 Ascend 950PR/Ascend 950DT |
 
 - 执行结果
 

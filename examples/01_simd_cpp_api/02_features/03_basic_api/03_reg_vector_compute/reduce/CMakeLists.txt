@@ -19,7 +19,7 @@ find_package(ASC REQUIRED)
 project(kernel_samples LANGUAGES ASC CXX)
 
 add_executable(demo
-    ld_st_reg_unalign.asc
+    reduce.asc
 )
 
 target_link_libraries(demo PRIVATE
@@ -31,4 +31,5 @@ target_link_libraries(demo PRIVATE
 
 target_compile_options(demo PRIVATE
     $<$<COMPILE_LANGUAGE:ASC>:--npu-arch=${CMAKE_ASC_ARCHITECTURES}>
+    $<$<COMPILE_LANGUAGE:ASC>:--cce-simd-vf-fusion=false>
 )

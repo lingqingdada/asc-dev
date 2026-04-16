@@ -1,3 +1,6 @@
+#!/usr/bin/python3
+# coding=utf-8
+
 # ----------------------------------------------------------------------------------------------------------
 # Copyright (c) 2025 Huawei Technologies Co., Ltd.
 # This program is free software, you can redistribute it and/or modify it under the terms and conditions of
@@ -9,26 +12,21 @@
 # ----------------------------------------------------------------------------------------------------------
 
 
-cmake_minimum_required(VERSION 3.16)
+import os
+import numpy as np
 
-set(CMAKE_ASC_RUN_MODE "npu" CACHE STRING "Run mode: npu, cpu, sim")
-set(CMAKE_ASC_ARCHITECTURES "dav-3510" CACHE STRING "NPU architecture: dav-3510")
+def gen_golden_data_simple():
+    total_length = 256
+    data_type = np.float32
+    # 生成一个 [1, 256] 向量
+    x = np.random.uniform(1, 2, [1, total_length]).astype(data_type)
+    # 计算归约求和 golden = sum(x)，补齐到8个float以满足32B对齐
+    golden = np.zeros(8, dtype=data_type)
+    golden[0] = np.sum(x)
+    os.makedirs("input", exist_ok=True)
+    os.makedirs("output", exist_ok=True)
+    x.tofile('./input/input_x.bin')
+    golden.tofile('./output/golden.bin')
 
-find_package(ASC REQUIRED)
-
-project(kernel_samples LANGUAGES ASC CXX)
-
-add_executable(demo
-    ld_st_reg_unalign.asc
-)
-
-target_link_libraries(demo PRIVATE
-    tiling_api
-    register
-    platform
-    m
-)
-
-target_compile_options(demo PRIVATE
-    $<$<COMPILE_LANGUAGE:ASC>:--npu-arch=${CMAKE_ASC_ARCHITECTURES}>
-)
+if __name__ == "__main__":
+    gen_golden_data_simple()

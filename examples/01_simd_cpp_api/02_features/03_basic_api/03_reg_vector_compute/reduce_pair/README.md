@@ -1,42 +1,47 @@
-# muls样例
+# reduce_pair样例
 
 ## 概述
-本样例基于RegBase编程范式实现Muls运算，主要调用Muls接口。
-- Adds/Maxs/Mins/LeakyRelu接口皆可参考该样例
+本样例基于RegBase编程范式实现PairReduceElem运算，主要调用PairReduceElem接口（SUM模式）。
+- PairReduceElem接口对相邻的奇偶元素对进行归约求和，当前仅支持SUM归约模式
+
 
 ## 支持的产品
 - Ascend 950PR/Ascend 950DT
 
 ## 目录结构介绍
 ```
-├── muls
+├── reduce_pair
 │   ├── scripts
 │   │   ├── gen_data.py                // 输入数据和真值数据生成脚本
 │   ├── CMakeLists.txt                 // 编译工程文件
 │   ├── data_utils.h                   // 数据读入写出函数
-│   ├── muls.asc                       // AscendC样例实现 & 调用样例
+│   ├── reduce_pair.asc                // AscendC样例实现 & 调用样例
 │   └── README.md                      // 样例介绍
 ```
 
 ## 样例描述
 - 样例功能：  
-  对向量做标量乘法，向量元素个数为256，数据类型为float，标量值为2.0。
+  对输入向量做PairReduceElem归约求和运算，向量shape为[1, 256]，数据类型为float。  
+  PairReduceElem对相邻奇偶元素对求和：dst[i] = src[2i] + src[2i+1]  
+  256个float输入产生128个求和结果。
+
 - 样例规格：
   <table>
   <tr><td rowspan="1" align="center">样例类型(OpType)</td><td colspan="3" align="center">AIV样例</td></tr>
   </tr>
-  <tr><td rowspan="3" align="center">样例输入</td><td align="center">name</td><td align="center">shape</td><td align="center">data type</td></tr>
+  <tr><td rowspan="2" align="center">样例输入</td><td align="center">name</td><td align="center">shape</td><td align="center">data type</td></tr>
   <tr><td align="center">x</td><td align="center">[1, 256]</td><td align="center">float</td></tr>
-  <tr><td align="center">scalar</td><td align="center">[1]</td><td align="center">float</td></tr>
   </tr>
+  <tr><td rowspan="1" align="center">样例输出</td><td align="center">y</td><td align="center">[1, 128]</td><td align="center">float</td></tr>
   </tr>
-  <tr><td rowspan="1" align="center">样例输出</td><td align="center">z</td><td align="center">[1, 256]</td><td align="center">float</td></tr>
-  </tr>
-  <tr><td rowspan="1" align="center">核函数名</td><td colspan="4" align="center">muls</td></tr>
+  <tr><td rowspan="1" align="center">核函数名</td><td colspan="4" align="center">reduce_pair</td></tr>
   </table>
-- 样例实现：  
-   MulsVF函数内调用Muls接口进行计算，结果写回UB
-  - 调用实现  
+- 样例实现：
+   PairReduceSumVF函数内调用PairReduceElem接口进行归约计算：
+   - 使用LoadAlign加载数据到寄存器
+   - 使用PairReduceElem(PairReduce::SUM)对相邻奇偶元素对求和
+   - 使用StoreAlign将结果写回UB
+  - 调用实现
     使用内核调用符<<<>>>调用核函数。
 
 ## 编译运行
@@ -61,7 +66,7 @@
 - 样例执行
   ```bash
   mkdir -p build && cd build;                                               # 创建并进入build目录
-  cmake -DCMAKE_ASC_ARCHITECTURES=dav-3510 ..;make -j;                                     # 编译工程（默认npu模式）
+  cmake -DCMAKE_ASC_ARCHITECTURES=dav-3510 ..;make -j;                      # 编译工程（默认npu模式）
   python3 ../scripts/gen_data.py                                            # 生成测试输入数据
   ./demo                                                                    # 执行编译生成的可执行程序，执行样例
   ```
@@ -81,7 +86,7 @@
 | 选项　　　　　　　　　　　| 可选值　　　　　　　　　　　| 说明　　　　　　　　　　　　　　　　　　　　　　　|
 | ---------------------------| -----------------------------| ---------------------------------------------------|
 | `CMAKE_ASC_RUN_MODE`　　　| `npu`（默认）、`cpu`、`sim` | 运行模式：NPU 运行、CPU调试、NPU仿真　　　　　　　|
-| `CMAKE_ASC_ARCHITECTURES` | `dav-3510`（默认）　　　　　| NPU 架构：dav-3510 对应 Ascend 950PR/Ascend 950DT |
+| `CMAKE_ASC_ARCHITECTURES` | `dav-3510`　　　　　　　　　| NPU 架构：dav-3510 对应 Ascend 950PR/Ascend 950DT |
 
 - 执行结果
 
